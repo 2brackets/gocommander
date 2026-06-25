@@ -47,7 +47,6 @@ func (m *model) Init() tea.Cmd {
 }
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	current := m.activePanel
 	switch msg := msg.(type) {
 
 	case tea.KeyMsg:
@@ -56,22 +55,20 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 
-		case "down":
-			if current.selectedIndex < len(current.entries)-1 {
-				current.selectedIndex++
-			}
-
 		case "up":
-			if current.selectedIndex > 0 {
-				current.selectedIndex--
-			}
+			m.moveUp()
+
+		case "down":
+			m.moveDown()
+
+		case "enter":
+			m.enterDirectory()
+
+		case "backspace":
+			m.parentDirectory()
 
 		case "tab":
-			if m.activePanel == &m.leftPanel {
-				m.activePanel = &m.rightPanel
-			} else {
-				m.activePanel = &m.leftPanel
-			}
+			m.switchPanel()
 		}
 	}
 	return m, nil

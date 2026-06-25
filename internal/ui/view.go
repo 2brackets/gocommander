@@ -1,85 +1,66 @@
 package ui
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
+
+const panelWidth = 38
+
+var (
+	panelStyle = lipgloss.NewStyle().
+			Border(lipgloss.NormalBorder()).
+			Padding(0, 1).
+			Width(panelWidth)
+
+	activePanelStyle = lipgloss.NewStyle().
+				Border(lipgloss.ThickBorder()).
+				Padding(0, 1).
+				Width(panelWidth)
+)
 
 func (m *model) View() string {
+	if m.err != nil {
+		return m.errorView()
+	}
+
+	left := renderPanel(m.leftPanel.Path(), &m.leftPanel, m.activePanel == &m.leftPanel)
+	right := renderPanel(m.rightPanel.Path(), &m.rightPanel, m.activePanel == &m.rightPanel)
+
+	panels := lipgloss.JoinHorizontal(lipgloss.Top, left, right)
+
+	footer := "\nF3 View  F4 Edit  F5 Copy  F6 Move  F7 MkDir  F8 Delete\nTab switch panel   q quit"
+
+	return "GoCommander\n\n" + panels + footer
+}
+
+func renderPanel(title string, p *panel, active bool) string {
 	var builder strings.Builder
 
-	builder.WriteString("GoCommander\n\n")
+	builder.WriteString(title)
+	builder.WriteString("\n\n")
 
-	leftTitle := "Left Panel"
-	rightTitle := "Right Panel"
-
-	if m.activePanel == &m.leftPanel {
-		leftTitle = "> " + leftTitle
-	} else {
-		leftTitle = "  " + leftTitle
-	}
-
-	if m.activePanel == &m.rightPanel {
-		rightTitle = "> " + rightTitle
-	} else {
-		rightTitle = "  " + rightTitle
-	}
-
-	builder.WriteString(leftTitle)
-	builder.WriteString("                    ")
-	builder.WriteString(rightTitle)
-	builder.WriteString("\n")
-
-	builder.WriteString("-----------------------------------------\n")
-
-	maxRows := len(m.leftPanel.entries)
-	if len(m.rightPanel.entries) > maxRows {
-		maxRows = len(m.rightPanel.entries)
-	}
-
-	for i := 0; i < maxRows; i++ {
-		if i < len(m.leftPanel.entries) {
-			writeEntry(&builder, &m.leftPanel, i)
+	for i, entry := range p.entries {
+		if i == p.selectedIndex {
+			builder.WriteString("> ")
 		} else {
-			builder.WriteString(strings.Repeat(" ", 24))
+			builder.WriteString("  ")
 		}
 
-		builder.WriteString("   ")
-
-		if i < len(m.rightPanel.entries) {
-			writeEntry(&builder, &m.rightPanel, i)
+		if entry.IsDir {
+			builder.WriteString("[DIR] ")
+		} else {
+			builder.WriteString("      ")
 		}
 
+		builder.WriteString(entry.Name)
 		builder.WriteString("\n")
 	}
 
-	builder.WriteString("\nF3 View   F4 Edit   F5 Copy   F6 Move   F7 MkDir   F8 Delete\n")
-	builder.WriteString("Tab switch panel   q quit\n")
-
-	return builder.String()
-}
-
-func writeEntry(builder *strings.Builder, p *panel, index int) {
-	entry := p.entries[index]
-
-	if index == p.selectedIndex {
-		builder.WriteString("> ")
-	} else {
-		builder.WriteString("  ")
+	if active {
+		return activePanelStyle.Render(builder.String())
 	}
 
-	if entry.IsDir {
-		builder.WriteString("[DIR] ")
-	} else {
-		builder.WriteString("      ")
-	}
-
-	name := entry.Name
-	if len(name) > 16 {
-		name = name[:16]
-	}
-
-	builder.WriteString(name)
-
-	padding := 24 - len(name)
-	if padding > 0 {
-		builder.WriteString(strings.Repeat(" ", padding))
-	}
+	return panelStyle.Render(builder.String())
 }
