@@ -1,26 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"log"
 
-	"github.com/2brackets/gocommander/internal/filemanager"
+	"github.com/2brackets/gocommander/internal/ui"
 )
 
 func main() {
-	fm := filemanager.New(".")
-
-	entries, err := fm.ListDirectory()
-	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
-	}
-
-	for _, entry := range entries {
-		if entry.IsDir {
-			fmt.Println("[DIR] ", entry.Name)
-		} else {
-			fmt.Println("      ", entry.Name)
-		}
+	if err := ui.Run(); err != nil {
+		log.Fatal(err)
 	}
 }

@@ -17,7 +17,7 @@ func New(path string) *FileManager {
 	}
 }
 
-func (fm *FileManager) ListDirectory() ([]FileEntry, error) {
+func (fm *FileManager) Read() ([]FileEntry, error) {
 	dirEntries, err := os.ReadDir(fm.currentPath)
 	if err != nil {
 		return nil, err
