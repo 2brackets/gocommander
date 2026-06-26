@@ -3,6 +3,7 @@ package filemanager
 import (
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type FileEntry struct {
@@ -10,6 +11,8 @@ type FileEntry struct {
 	Path     string
 	IsDir    bool
 	IsParent bool
+	Size     int64
+	Modified time.Time
 }
 
 type FileManager struct {
@@ -39,13 +42,21 @@ func (fm *FileManager) Read() ([]FileEntry, error) {
 		Path:     filepath.Dir(fm.currentPath),
 		IsDir:    true,
 		IsParent: true,
+		Size:     0,
+		Modified: time.Time{},
 	})
 
 	for _, dirEntry := range dirEntries {
+		info, err := dirEntry.Info()
+		if err != nil {
+			continue
+		}
 		entries = append(entries, FileEntry{
-			Name:  dirEntry.Name(),
-			Path:  filepath.Join(fm.currentPath, dirEntry.Name()),
-			IsDir: dirEntry.IsDir(),
+			Name:     dirEntry.Name(),
+			Path:     filepath.Join(fm.currentPath, dirEntry.Name()),
+			IsDir:    dirEntry.IsDir(),
+			Size:     info.Size(),
+			Modified: info.ModTime(),
 		})
 	}
 
